@@ -1,10 +1,10 @@
-package com.rms.restaurant_management;
+package com.rms.restaurant_management_backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RestaurantManagementApplicationTests {
+class RestaurantManagementBackendApplicationTests {
 
 	@Test
 	void contextLoads() {
