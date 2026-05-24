@@ -28,7 +28,7 @@ public class AuthServiceImpl  implements AuthService {
             throw new BadRequestException("Email already in use"+request.getEmail());
         User user = User.builder().fullName(request.getFullName()).email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword())).phone(request.getPhone())
-            .role(User.Role.STAFF).isActive(true).build();
+            .role(User.Role.CUSTOMER).isActive(true).build();
         userRepository.save(user);
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
