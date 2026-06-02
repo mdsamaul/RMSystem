@@ -1,15 +1,20 @@
 package com.rms.backend.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rms.backend.dto.response.ApiResponse;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.service.UserService;
+
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,5 +34,27 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(ApiResponse.success("Profile Fetched", userService.getProfile(user.getUsername())));
 
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all users")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponse.success("Users fetched", userService.getAllUsers()));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get user by ID")
+    public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("User fetched", userService.getUserById(id)));
+    }
+
+    @PatchMapping("/{id}/toggle-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Enable or disable a user")
+    public ResponseEntity<ApiResponse<Void>> toggleStatus(@PathVariable Long id) {
+        userService.toggleUserStatus(id);
+        return ResponseEntity.ok(ApiResponse.success("User status toggled"));
     }
 }
