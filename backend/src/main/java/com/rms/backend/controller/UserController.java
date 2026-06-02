@@ -7,9 +7,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rms.backend.dto.request.StaffPermissionsRequest;
 import com.rms.backend.dto.response.ApiResponse;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.service.UserService;
@@ -56,5 +58,16 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> toggleStatus(@PathVariable Long id) {
         userService.toggleUserStatus(id);
         return ResponseEntity.ok(ApiResponse.success("User status toggled"));
+    }
+
+    @PatchMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Assign staff permissions")
+    public ResponseEntity<ApiResponse<UserResponse>> updatePermissions(
+            @PathVariable Long id,
+            @RequestBody StaffPermissionsRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Permissions updated",
+                userService.updateStaffPermissions(id, request.getPermissions())));
     }
 }

@@ -1,12 +1,16 @@
 package com.rms.backend.service.impl;
 
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.rms.backend.dto.response.UserResponse;
+import com.rms.backend.entity.User;
+import com.rms.backend.exception.BadRequestException;
 import com.rms.backend.repository.UserRepository;
 import com.rms.backend.service.UserService;
 
@@ -35,6 +39,16 @@ public class UserServiceImpl implements UserService {
         var user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setIsActive(!user.getIsActive());
         userRepository.save(user);
+    }
+
+    @Override
+    public UserResponse updateStaffPermissions(Long id, Set<User.Permission> permissions) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() != User.Role.STAFF) {
+            throw new BadRequestException("Permissions can only be assigned to staff users");
+        }
+        user.setPermissions(permissions == null ? new HashSet<>() : new HashSet<>(permissions));
+        return UserResponse.from(userRepository.save(user));
     }
 
 }

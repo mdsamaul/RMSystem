@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { menuAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
+const itemAvatars = ['🍛','🍜','🥘','🍲','🥗','🍱','🍝','🥩','🍗','🥚']
+const itemAvatar = (id = 0) => itemAvatars[id % itemAvatars.length]
+const hasDealPrice = (item) => Number(item.regularPrice) > Number(item.price)
+const discountPercent = (item) => Math.round(((Number(item.regularPrice) - Number(item.price)) / Number(item.regularPrice)) * 100)
+
 export default function MenuManagement() {
+  const { isAdmin, hasPermission } = useAuth()
   const [categories, setCategories] = useState([])
   const [items, setItems] = useState([])
   const [activeTab, setActiveTab] = useState('items')
@@ -12,12 +19,17 @@ export default function MenuManagement() {
   const [editCat, setEditCat] = useState(null)
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
-  const [itemForm, setItemForm] = useState({ categoryId:'', name:'', description:'', price:'', imageUrl:'', isAvailable:true, estimatedMinutes:15 })
+  const [itemForm, setItemForm] = useState({ categoryId:'', name:'', description:'', price:'', regularPrice:'', imageUrl:'', isAvailable:true, estimatedMinutes:15 })
   const [catForm, setCatForm] = useState({ name:'', description:'', sortOrder:0 })
+  const canCreateMenu = isAdmin || hasPermission('MENU_CREATE')
+  const canUpdateMenu = isAdmin || hasPermission('MENU_UPDATE')
+  const canDeleteMenu = isAdmin || hasPermission('MENU_DELETE')
+  const canToggleAvailability = isAdmin || hasPermission('MENU_AVAILABILITY')
 
   const load = () => {
-    Promise.all([menuAPI.getCategories(), menuAPI.getItems()])
+    Promise.all([menuAPI.getCategories(), menuAPI.getItems({ includeUnavailable: true })])
       .then(([c,i]) => { setCategories(c.data.data||[]); setItems(i.data.data||[]) })
       .catch(()=>toast.error('Failed to load menu'))
       .finally(()=>setLoading(false))
@@ -26,17 +38,36 @@ export default function MenuManagement() {
 
   const filteredItems = items.filter(i =>
     (!search || i.name.toLowerCase().includes(search.toLowerCase())) &&
-    (!filterCat || String(i.categoryId) === String(filterCat))
+    (!filterCat || String(i.categoryId) === String(filterCat)) &&
+    (statusFilter === 'all' || (statusFilter === 'available' ? i.isAvailable : !i.isAvailable))
   )
+  const availableCount = items.filter(i => i.isAvailable).length
+  const pausedCount = items.length - availableCount
 
   const openEditItem = (item) => {
     setEditItem(item)
-    setItemForm({ categoryId:item.categoryId, name:item.name, description:item.description||'', price:item.price, imageUrl:item.imageUrl||'', isAvailable:item.isAvailable, estimatedMinutes:item.estimatedMinutes||15 })
+    setItemForm({ categoryId:item.categoryId, name:item.name, description:item.description||'', price:item.price, regularPrice:item.regularPrice||'', imageUrl:item.imageUrl||'', isAvailable:item.isAvailable, estimatedMinutes:item.estimatedMinutes||15 })
     setShowItemModal(true)
   }
-  const openNewItem = () => { setEditItem(null); setItemForm({ categoryId:'', name:'', description:'', price:'', imageUrl:'', isAvailable:true, estimatedMinutes:15 }); setShowItemModal(true) }
+  const openNewItem = () => { setEditItem(null); setItemForm({ categoryId:'', name:'', description:'', price:'', regularPrice:'', imageUrl:'', isAvailable:true, estimatedMinutes:15 }); setShowItemModal(true) }
   const openEditCat = (cat) => { setEditCat(cat); setCatForm({ name:cat.name, description:cat.description||'', sortOrder:cat.sortOrder||0 }); setShowCatModal(true) }
   const openNewCat = () => { setEditCat(null); setCatForm({ name:'', description:'', sortOrder:0 }); setShowCatModal(true) }
+
+  const handleImageUpload = (file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be under 2 MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setItemForm(prev => ({ ...prev, imageUrl: reader.result }))
+    reader.onerror = () => toast.error('Could not read image')
+    reader.readAsDataURL(file)
+  }
 
   const saveItem = async () => {
     try {
@@ -71,10 +102,12 @@ export default function MenuManagement() {
     <div className="page-content">
       <div className="flex-between page-header">
         <div><h1>🍽️ Menu Management</h1><p>Manage your menu categories and items</p></div>
-        <div style={{display:'flex',gap:'10px'}}>
-          <button className="btn btn-secondary" onClick={openNewCat}>+ Category</button>
-          <button className="btn btn-primary" onClick={openNewItem}>+ Add Item</button>
-        </div>
+        {canCreateMenu && (
+          <div style={{display:'flex',gap:'10px'}}>
+            <button className="btn btn-secondary" onClick={openNewCat}>+ Category</button>
+            <button className="btn btn-primary" onClick={openNewItem}>+ Add Item</button>
+          </div>
+        )}
       </div>
 
       <div style={{display:'flex',gap:'4px',marginBottom:'20px',background:'var(--bg)',padding:'4px',borderRadius:'8px',width:'fit-content'}}>
@@ -99,36 +132,76 @@ export default function MenuManagement() {
               <option value="">All Categories</option>
               {categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+            <div style={{display:'flex',gap:'4px',background:'var(--bg)',padding:'4px',borderRadius:'8px'}}>
+              {[
+                ['all', `All (${items.length})`],
+                ['available', `Available (${availableCount})`],
+                ['paused', `Paused (${pausedCount})`],
+              ].map(([value,label]) => (
+                <button key={value} className={`btn btn-sm ${statusFilter===value?'btn-primary':'btn-secondary'}`}
+                  onClick={()=>setStatusFilter(value)}>{label}</button>
+              ))}
+            </div>
           </div>
           <div className="card">
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Prep Time</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Prep Time</th><th>Status</th>{(canUpdateMenu || canDeleteMenu) && <th>Actions</th>}</tr></thead>
                 <tbody>
                   {filteredItems.length === 0
                     ? <tr><td colSpan={5}><div className="empty-state"><div className="icon">🍽️</div><p>No items found</p></div></td></tr>
                     : filteredItems.map(item=>(
                       <tr key={item.id}>
                         <td>
-                          <div style={{fontWeight:600}}>{item.name}</div>
-                          <div style={{fontSize:'12px',color:'var(--text-muted)',marginTop:'2px'}}>{item.description?.slice(0,50)}{item.description?.length>50?'...':''}</div>
-                        </td>
-                        <td><span className="badge badge-info">{item.categoryName}</span></td>
-                        <td><span className="price">৳{parseFloat(item.price).toFixed(0)}</span></td>
-                        <td><span style={{fontSize:'12px',color:'var(--text-muted)'}}>⏱️ {item.estimatedMinutes||15} min</span></td>
-                        <td>
-                          <button onClick={()=>toggleAvail(item.id)}
-                            className={`badge ${item.isAvailable?'badge-success':'badge-danger'}`}
-                            style={{cursor:'pointer',border:'none'}}>
-                            {item.isAvailable ? '✅ Available' : '❌ Unavailable'}
-                          </button>
-                        </td>
-                        <td>
-                          <div style={{display:'flex',gap:'6px'}}>
-                            <button className="btn btn-secondary btn-sm" onClick={()=>openEditItem(item)}>✏️</button>
-                            <button className="btn btn-danger btn-sm" onClick={()=>deleteItem(item.id)}>🗑️</button>
+                          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.name}
+                                style={{width:'48px',height:'48px',borderRadius:'8px',objectFit:'cover',border:'1px solid var(--border)',flexShrink:0}}/>
+                            ) : (
+                              <div style={{width:'48px',height:'48px',borderRadius:'8px',background:'var(--primary-light)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px',flexShrink:0}}>
+                                {itemAvatar(item.id)}
+                              </div>
+                            )}
+                            <div>
+                              <div style={{fontWeight:600}}>{item.name}</div>
+                              <div style={{fontSize:'12px',color:'var(--text-muted)',marginTop:'2px'}}>{item.description?.slice(0,50)}{item.description?.length>50?'...':''}</div>
+                            </div>
                           </div>
                         </td>
+                        <td><span className="badge badge-info">{item.categoryName}</span></td>
+                        <td>
+                          <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+                            <span className="price">৳{parseFloat(item.price).toFixed(0)}</span>
+                            {hasDealPrice(item) && (
+                              <>
+                                <span style={{fontSize:'12px',color:'var(--text-muted)',textDecoration:'line-through'}}>৳{parseFloat(item.regularPrice).toFixed(0)}</span>
+                                <span className="badge badge-success" style={{fontSize:'10px'}}>{discountPercent(item)}% off</span>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td><span style={{fontSize:'12px',color:'var(--text-muted)'}}>⏱️ {item.estimatedMinutes||15} min</span></td>
+                        <td>
+                          {canToggleAvailability ? (
+                            <button onClick={()=>toggleAvail(item.id)}
+                              className={`badge ${item.isAvailable?'badge-success':'badge-danger'}`}
+                              style={{cursor:'pointer',border:'none'}}>
+                              {item.isAvailable ? '✅ Available' : '⏸️ Paused'}
+                            </button>
+                          ) : (
+                            <span className={`badge ${item.isAvailable?'badge-success':'badge-danger'}`}>
+                              {item.isAvailable ? '✅ Available' : '⏸️ Paused'}
+                            </span>
+                          )}
+                        </td>
+                        {(canUpdateMenu || canDeleteMenu) && (
+                          <td>
+                            <div style={{display:'flex',gap:'6px'}}>
+                              {canUpdateMenu && <button className="btn btn-secondary btn-sm" onClick={()=>openEditItem(item)}>✏️</button>}
+                              {canDeleteMenu && <button className="btn btn-danger btn-sm" onClick={()=>deleteItem(item.id)}>🗑️</button>}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   }
@@ -143,7 +216,7 @@ export default function MenuManagement() {
         <div className="card">
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Category</th><th>Description</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Category</th><th>Description</th><th>Sort Order</th><th>Status</th>{canUpdateMenu && <th>Actions</th>}</tr></thead>
               <tbody>
                 {categories.length === 0
                   ? <tr><td colSpan={5}><div className="empty-state"><div className="icon">📂</div><p>No categories</p></div></td></tr>
@@ -153,7 +226,7 @@ export default function MenuManagement() {
                       <td style={{color:'var(--text-muted)'}}>{c.description || '—'}</td>
                       <td>{c.sortOrder}</td>
                       <td><span className={`badge ${c.isActive?'badge-success':'badge-danger'}`}>{c.isActive?'Active':'Inactive'}</span></td>
-                      <td><button className="btn btn-secondary btn-sm" onClick={()=>openEditCat(c)}>✏️ Edit</button></td>
+                      {canUpdateMenu && <td><button className="btn btn-secondary btn-sm" onClick={()=>openEditCat(c)}>✏️ Edit</button></td>}
                     </tr>
                   ))
                 }
@@ -187,16 +260,47 @@ export default function MenuManagement() {
                 <label className="form-label">Description</label>
                 <textarea className="form-textarea" value={itemForm.description} onChange={e=>setItemForm({...itemForm,description:e.target.value})} placeholder="Item description..."/>
               </div>
+              <div className="form-group">
+                <label className="form-label">Item Image</label>
+                <div style={{display:'grid',gridTemplateColumns:'120px 1fr',gap:'14px',alignItems:'center'}}>
+                  {itemForm.imageUrl ? (
+                    <img src={itemForm.imageUrl} alt="Item preview"
+                      style={{width:'120px',height:'90px',borderRadius:'8px',objectFit:'cover',border:'1px solid var(--border)',background:'#fff'}}/>
+                  ) : (
+                    <div style={{width:'120px',height:'90px',borderRadius:'8px',background:'var(--primary-light)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'38px',border:'1px solid var(--border)'}}>
+                      {itemAvatar(editItem?.id || 0)}
+                    </div>
+                  )}
+                  <div>
+                    <input className="form-input" type="file" accept="image/*"
+                      onChange={e=>handleImageUpload(e.target.files?.[0])}/>
+                    <div style={{fontSize:'11px',color:'var(--text-muted)',marginTop:'6px'}}>Optional. If empty, the default item avatar will be used.</div>
+                    {itemForm.imageUrl && (
+                      <button type="button" className="btn btn-secondary btn-sm" style={{marginTop:'8px'}}
+                        onClick={()=>setItemForm({...itemForm,imageUrl:''})}>
+                        Remove Image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label className="form-label">Price (৳) *</label>
+                  <label className="form-label">Sale Price (৳) *</label>
                   <input className="form-input" type="number" step="0.01" value={itemForm.price} onChange={e=>setItemForm({...itemForm,price:e.target.value})} placeholder="0.00"/>
                 </div>
                 <div className="form-group">
+                  <label className="form-label">Regular Price (৳)</label>
+                  <input className="form-input" type="number" step="0.01" value={itemForm.regularPrice} onChange={e=>setItemForm({...itemForm,regularPrice:e.target.value})} placeholder="e.g. 400"/>
+                  <div style={{fontSize:'11px',color:'var(--text-muted)',marginTop:'4px'}}>Optional. Example: regular 400, sale 350.</div>
+                </div>
+              </div>
+              <div className="form-grid-2">
+                <div className="form-group">
                   <label className="form-label">Available</label>
                   <select className="form-select" value={itemForm.isAvailable} onChange={e=>setItemForm({...itemForm,isAvailable:e.target.value==='true'})}>
-                    <option value="true">✅ Yes</option>
-                    <option value="false">❌ No</option>
+                    <option value="true">✅ Available</option>
+                    <option value="false">⏸️ Paused</option>
                   </select>
                 </div>
               </div>

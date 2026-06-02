@@ -7,17 +7,31 @@ import com.rms.backend.exception.BadRequestException;
 import com.rms.backend.repository.UserRepository;
 import com.rms.backend.security.service.JwtService;
 import com.rms.backend.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service @RequiredArgsConstructor
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    public AuthServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     @Override
     public AuthResponse register(RegisterRequest req) {
@@ -30,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        return AuthResponse.of(accessToken, refreshToken, user.getEmail(), user.getFullName(), user.getRole().name());
+        return AuthResponse.of(user.getId(), accessToken, refreshToken, user.getFullName(), user.getEmail(), user.getRole().name(), permissionsOf(user));
     }
 
     @Override
@@ -40,6 +54,15 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> new BadRequestException("User not found"));
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        return AuthResponse.of(accessToken, refreshToken, user.getEmail(), user.getFullName(), user.getRole().name());
+        return AuthResponse.of(user.getId(), accessToken, refreshToken, user.getFullName(), user.getEmail(), user.getRole().name(), permissionsOf(user));
+    }
+
+    private Set<String> permissionsOf(User user) {
+        if (user.getRole() == User.Role.ADMIN) {
+            return Arrays.stream(User.Permission.values()).map(Enum::name).collect(Collectors.toSet());
+        }
+        return user.getPermissions() == null
+                ? Set.of()
+                : user.getPermissions().stream().map(Enum::name).collect(Collectors.toSet());
     }
 }

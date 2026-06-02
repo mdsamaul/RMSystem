@@ -56,6 +56,7 @@ public class MenuServiceImpl implements MenuService {
             .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + req.getCategoryId()));
         MenuItem item = MenuItem.builder().category(cat).name(req.getName())
             .description(req.getDescription()).price(req.getPrice())
+            .regularPrice(req.getRegularPrice())
             .imageUrl(req.getImageUrl()).isAvailable(req.getIsAvailable())
             .estimatedMinutes(req.getEstimatedMinutes() != null ? req.getEstimatedMinutes() : 15).build();
         return MenuItemResponse.from(itemRepo.save(item));
@@ -68,6 +69,7 @@ public class MenuServiceImpl implements MenuService {
             .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + req.getCategoryId()));
         item.setCategory(cat); item.setName(req.getName());
         item.setDescription(req.getDescription()); item.setPrice(req.getPrice());
+        item.setRegularPrice(req.getRegularPrice());
         item.setImageUrl(req.getImageUrl());
         if (req.getIsAvailable() != null) item.setIsAvailable(req.getIsAvailable());
         if (req.getEstimatedMinutes() != null) item.setEstimatedMinutes(req.getEstimatedMinutes());
@@ -94,8 +96,20 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override @Transactional(readOnly=true)
+    public List<MenuItemResponse> getAllItemsIncludingUnavailable() {
+        return itemRepo.findAll().stream()
+            .map(MenuItemResponse::from).collect(Collectors.toList());
+    }
+
+    @Override @Transactional(readOnly=true)
     public List<MenuItemResponse> getItemsByCategory(Long categoryId) {
         return itemRepo.findByCategoryIdAndIsAvailableTrue(categoryId).stream()
+            .map(MenuItemResponse::from).collect(Collectors.toList());
+    }
+
+    @Override @Transactional(readOnly=true)
+    public List<MenuItemResponse> getItemsByCategoryIncludingUnavailable(Long categoryId) {
+        return itemRepo.findByCategoryId(categoryId).stream()
             .map(MenuItemResponse::from).collect(Collectors.toList());
     }
 
