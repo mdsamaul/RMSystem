@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.rms.backend.dto.request.PaymentRequest;
 import com.rms.backend.dto.response.ApiResponse;
+import com.rms.backend.dto.response.PaymentResponse;
+import com.rms.backend.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/v1/payments")
