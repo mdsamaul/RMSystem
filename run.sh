@@ -9,30 +9,6 @@ FRONTEND_DIR="$ROOT_DIR/frontend"
 BACKEND_PID=""
 FRONTEND_PID=""
 
-get_lan_ip() {
-  local ip=""
-
-  if command -v hostname >/dev/null 2>&1; then
-    ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
-    if [ -n "$ip" ]; then
-      echo "$ip"
-      return 0
-    fi
-  fi
-
-  if command -v ipconfig >/dev/null 2>&1; then
-    ip="$(ipconfig 2>/dev/null | awk '/IPv4 Address|IPv4/{gsub("\r",""); print $NF; exit}')"
-    if [ -n "$ip" ]; then
-      echo "$ip"
-      return 0
-    fi
-  fi
-
-  echo "YOUR_PC_IP"
-}
-
-LAN_IP="$(get_lan_ip)"
-
 cleanup() {
   echo
   echo "Stopping backend and frontend..."
@@ -63,13 +39,12 @@ echo "Starting backend on http://localhost:8081"
 BACKEND_PID=$!
 
 echo "Starting frontend on http://localhost:3000"
-echo "Phone URL: http://$LAN_IP:3000"
 (
   cd "$FRONTEND_DIR"
   if command -v yarn >/dev/null 2>&1; then
     yarn dev --host 0.0.0.0
   else
-    npm run dev -- --host 0.0.0.0
+    npm run dev -- --host 192.168.1.100
   fi
 ) &
 FRONTEND_PID=$!
@@ -77,10 +52,6 @@ FRONTEND_PID=$!
 echo
 echo "Backend PID : $BACKEND_PID"
 echo "Frontend PID: $FRONTEND_PID"
-echo
-echo "Open on this PC : http://localhost:3000"
-echo "Open on phone   : http://$LAN_IP:3000"
-echo "Make sure your phone and PC are on the same Wi-Fi."
 echo "Press Ctrl+C to stop both servers."
 echo
 
