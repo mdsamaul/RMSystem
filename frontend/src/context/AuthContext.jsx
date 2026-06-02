@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
     const r = await authAPI.login({ email, password })
     const d = r.data.data
     localStorage.setItem('rms_token', d.accessToken)
-    const u = { email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
+    const u = { id: d.id, email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
     localStorage.setItem('rms_user', JSON.stringify(u))
     setUser(u)
     toast.success(`Welcome back, ${d.fullName}! 👋`)
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     const r = await authAPI.register(data)
     const d = r.data.data
     localStorage.setItem('rms_token', d.accessToken)
-    const u = { email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
+    const u = { id: d.id, email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
     localStorage.setItem('rms_user', JSON.stringify(u))
     setUser(u)
     toast.success('Account created successfully! 🎉')

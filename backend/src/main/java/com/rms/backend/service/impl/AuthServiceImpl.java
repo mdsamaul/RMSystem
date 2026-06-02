@@ -7,17 +7,27 @@ import com.rms.backend.exception.BadRequestException;
 import com.rms.backend.repository.UserRepository;
 import com.rms.backend.security.service.JwtService;
 import com.rms.backend.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service @RequiredArgsConstructor
+@Service
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    public AuthServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     @Override
     public AuthResponse register(RegisterRequest req) {
@@ -30,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        return AuthResponse.of(accessToken, refreshToken, user.getEmail(), user.getFullName(), user.getRole().name());
+        return AuthResponse.of(user.getId(), accessToken, refreshToken, user.getFullName(), user.getEmail(), user.getRole().name());
     }
 
     @Override
@@ -40,6 +50,6 @@ public class AuthServiceImpl implements AuthService {
             .orElseThrow(() -> new BadRequestException("User not found"));
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        return AuthResponse.of(accessToken, refreshToken, user.getEmail(), user.getFullName(), user.getRole().name());
+        return AuthResponse.of(user.getId(), accessToken, refreshToken, user.getFullName(), user.getEmail(), user.getRole().name());
     }
 }
