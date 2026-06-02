@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rms.backend.dto.response.ApiResponse;
 import com.rms.backend.dto.response.UserResponse;
-import com.rms.backend.repository.UserRepository;
 import com.rms.backend.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
