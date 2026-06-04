@@ -52,7 +52,7 @@ body {
   transition: width .25s;
 }
 
-.admin-layout.sidebar-collapsed .sidebar {
+.app-layout.sidebar-collapsed .sidebar {
   width: var(--sidebar-collapsed-w);
   overflow-x: hidden;
   cursor: pointer;
@@ -95,12 +95,12 @@ body {
   border-color: rgba(232,93,4,.45);
   color: #fff;
 }
-.admin-layout.sidebar-collapsed .sidebar-logo {
+.app-layout.sidebar-collapsed .sidebar-logo {
   justify-content: center;
   padding: 24px 14px 20px;
 }
-.admin-layout.sidebar-collapsed .sidebar-brand,
-.admin-layout.sidebar-collapsed .sidebar-logo-toggle {
+.app-layout.sidebar-collapsed .sidebar-brand,
+.app-layout.sidebar-collapsed .sidebar-logo-toggle {
   display: none;
 }
 
@@ -129,17 +129,18 @@ body {
   padding: 16px 12px;
   border-top: 1px solid rgba(255,255,255,.08);
 }
-.admin-layout.sidebar-collapsed .sidebar-nav,
-.admin-layout.sidebar-collapsed .sidebar-footer {
+.app-layout.sidebar-collapsed .sidebar-nav,
+.app-layout.sidebar-collapsed .sidebar-footer {
   padding-left: 12px;
   padding-right: 12px;
 }
-.admin-layout.sidebar-collapsed .nav-section-title,
-.admin-layout.sidebar-collapsed .nav-label,
-.admin-layout.sidebar-collapsed .sidebar-footer .avatar + div {
+.app-layout.sidebar-collapsed .nav-section-title,
+.app-layout.sidebar-collapsed .nav-label,
+.app-layout.sidebar-collapsed .sidebar-footer .avatar + div,
+.app-layout.sidebar-collapsed .nav-item .badge {
   display: none;
 }
-.admin-layout.sidebar-collapsed .nav-item {
+.app-layout.sidebar-collapsed .nav-item {
   justify-content: center;
   gap: 0;
   width: 52px !important;
@@ -147,11 +148,11 @@ body {
   padding: 0;
   margin: 0 auto 8px;
 }
-.admin-layout.sidebar-collapsed .nav-item .nav-icon {
+.app-layout.sidebar-collapsed .nav-item .nav-icon {
   width: auto;
   font-size: 20px;
 }
-.admin-layout.sidebar-collapsed .sidebar-footer > div {
+.app-layout.sidebar-collapsed .sidebar-footer > div {
   justify-content: center;
   margin-bottom: 12px !important;
 }
@@ -163,7 +164,7 @@ body {
   transition: margin-left .25s;
 }
 
-.admin-layout.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-w); }
+.app-layout.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-w); }
 
 .topbar {
   height: var(--header-h); background: var(--card);
