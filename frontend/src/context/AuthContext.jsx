@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
     const r = await authAPI.login({ email, password })
     const d = r.data.data
     localStorage.setItem('rms_token', d.accessToken)
-    const u = { email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
+    const u = { id: d.id, email: d.email, fullName: d.fullName, role: d.role, permissions: d.permissions || [], token: d.accessToken }
     localStorage.setItem('rms_user', JSON.stringify(u))
     setUser(u)
     toast.success(`Welcome back, ${d.fullName}! 👋`)
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     const r = await authAPI.register(data)
     const d = r.data.data
     localStorage.setItem('rms_token', d.accessToken)
-    const u = { email: d.email, fullName: d.fullName, role: d.role, token: d.accessToken }
+    const u = { id: d.id, email: d.email, fullName: d.fullName, role: d.role, permissions: d.permissions || [], token: d.accessToken }
     localStorage.setItem('rms_user', JSON.stringify(u))
     setUser(u)
     toast.success('Account created successfully! 🎉')
@@ -48,8 +48,10 @@ export function AuthProvider({ children }) {
     toast.success('Logged out successfully')
   }
 
+  const hasPermission = (permission) => user?.role === 'ADMIN' || user?.permissions?.includes(permission)
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin: user?.role === 'ADMIN', isStaff: user?.role === 'STAFF', isCustomer: user?.role === 'CUSTOMER' }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, hasPermission, isAdmin: user?.role === 'ADMIN', isStaff: user?.role === 'STAFF', isCustomer: user?.role === 'CUSTOMER' }}>
       {children}
     </AuthContext.Provider>
   )

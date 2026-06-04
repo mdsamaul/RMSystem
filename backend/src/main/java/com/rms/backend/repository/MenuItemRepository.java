@@ -10,6 +10,7 @@ import java.util.List;
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     List<MenuItem> findByCategoryIdAndIsAvailableTrue(Long categoryId);
     List<MenuItem> findByIsAvailableTrue();
+    List<MenuItem> findByCategoryId(Long categoryId);
     @Query("SELECT m FROM MenuItem m WHERE m.isAvailable=true AND (LOWER(m.name) LIKE LOWER(CONCAT('%',:keyword,'%')) OR LOWER(m.description) LIKE LOWER(CONCAT('%',:keyword,'%')))")
     List<MenuItem> searchByKeyword(String keyword);
 }
