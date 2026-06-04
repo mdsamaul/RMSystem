@@ -370,6 +370,84 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .search-bar input { border: none; background: none; flex: 1; font-size: 14px; outline: none; }
 
+/* Users */
+.users-list-card { overflow: hidden; }
+.users-list-head,
+.users-list-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.3fr) minmax(190px, 1.25fr) 120px 105px 125px 92px 92px 88px;
+  gap: 12px;
+  align-items: center;
+}
+.users-list-head {
+  padding: 14px 20px;
+  background: #fafbff;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+.users-list-row {
+  min-height: 72px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f3f7;
+}
+.users-list-row:last-child { border-bottom: none; }
+.users-list-row:hover { background: #fcfcfd; }
+.users-person { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.users-avatar { color: #fff; font-size: 13px; }
+.users-person-text { min-width: 0; }
+.users-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.users-mobile-role { display: none; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.users-muted { color: var(--text-muted); font-size: 13px; }
+.users-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.users-phone { font-size: 14px; }
+.users-actions { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+.users-actions .btn { justify-content: center; }
+.users-icon-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+}
+.users-protected { color: var(--text-light); font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .users-list-head { display: none; }
+  .users-list-body {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg);
+  }
+  .users-list-row {
+    grid-template-columns: 1fr auto;
+    gap: 10px 16px;
+    min-height: 0;
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+  }
+  .users-list-row > div:nth-child(2),
+  .users-list-row > div:nth-child(3),
+  .users-list-row > div:nth-child(5),
+  .users-list-row > div:nth-child(7) {
+    grid-column: 1 / -1;
+  }
+  .users-list-row > div:nth-child(4) { display: none; }
+  .users-list-row > div:nth-child(6) { justify-self: end; }
+  .users-list-row > div:nth-child(8) {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+  .users-mobile-role { display: block; }
+  .users-actions { justify-content: flex-end; flex-wrap: wrap; }
+}
+
 /* ── Chat ── */
 .chat-bubble-in  { animation: slideInLeft .2s ease; }
 .chat-bubble-out { animation: slideInRight .2s ease; }

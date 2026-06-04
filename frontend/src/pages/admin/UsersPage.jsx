@@ -147,6 +147,13 @@ export default function UsersPage() {
     return <div className="page-content"><div className="loading-page"><div className="spinner" /></div></div>
   }
 
+  const permissionText = (user) => {
+    if (user.role === 'ADMIN') return 'Full access'
+    if (user.role === 'CUSTOMER') return 'Customer account'
+    const count = (user.permissions || []).length
+    return count ? `${count} permissions` : 'No permissions'
+  }
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -168,72 +175,59 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="card">
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Permissions</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => {
-                const isStaff = user.role === 'STAFF'
-                const isCustomer = user.role === 'CUSTOMER'
-                const canEdit = isAdmin && (isStaff || isCustomer)
+      <div className="card users-list-card">
+        <div className="users-list-head">
+          <div>User</div>
+          <div>Email</div>
+          <div>Phone</div>
+          <div>Role</div>
+          <div>Access</div>
+          <div>Status</div>
+          <div>Joined</div>
+          <div>Action</div>
+        </div>
 
-                return (
-                  <tr key={user.id}>
-                    <td>
-                      <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                        <div className="avatar" style={{background:user.role==='ADMIN'?'#ef4444':isStaff?'#f59e0b':'#10b981',color:'#fff',fontSize:'13px'}}>
-                          {user.fullName?.[0]?.toUpperCase()}
-                        </div>
-                        <span style={{fontWeight:600}}>{user.fullName}</span>
-                      </div>
-                    </td>
-                    <td style={{color:'var(--text-muted)'}}>{user.email}</td>
-                    <td>{user.phone || '-'}</td>
-                    <td><span className={`role-chip role-${user.role?.toLowerCase()}`}>{user.role}</span></td>
-                    <td>
-                      {isStaff ? (
-                        <span style={{fontSize:'12px',color:'var(--text-muted)'}}>
-                          {(user.permissions || []).length ? `${user.permissions.length} permissions` : 'No permissions'}
-                        </span>
-                      ) : (
-                        <span style={{fontSize:'12px',color:'var(--text-muted)'}}>
-                          {user.role === 'ADMIN' ? 'Full access' : 'Customer account'}
-                        </span>
-                      )}
-                    </td>
-                    <td><span className={`badge ${user.isActive?'badge-success':'badge-danger'}`}>{user.isActive?'Active':'Inactive'}</span></td>
-                    <td style={{fontSize:'12px',color:'var(--text-muted)'}}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</td>
-                    <td>
-                      {canEdit ? (
-                        <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-                          <button className="btn btn-sm btn-secondary" onClick={() => openEditDialog(user)}>
-                            Edit
-                          </button>
-                          <button className={`btn btn-sm ${user.isActive ? 'btn-danger' : 'btn-success'}`} onClick={() => toggleStatus(user)}>
-                            {user.isActive ? 'Inactive' : 'Active'}
-                          </button>
-                        </div>
-                      ) : (
-                        <span style={{fontSize:'12px',color:'var(--text-light)'}}>Protected</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="users-list-body">
+          {users.map(user => {
+            const isStaff = user.role === 'STAFF'
+            const isCustomer = user.role === 'CUSTOMER'
+            const canEdit = isAdmin && (isStaff || isCustomer)
+
+            return (
+              <div className="users-list-row" key={user.id}>
+                <div className="users-person">
+                  <div className="avatar users-avatar" style={{background:user.role==='ADMIN'?'#ef4444':isStaff?'#f59e0b':'#10b981'}}>
+                    {user.fullName?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="users-person-text">
+                    <div className="users-name">{user.fullName}</div>
+                    <div className="users-mobile-role">{user.role}</div>
+                  </div>
+                </div>
+
+                <div className="users-muted users-email">{user.email}</div>
+                <div className="users-phone">{user.phone || '-'}</div>
+                <div><span className={`role-chip role-${user.role?.toLowerCase()}`}>{user.role}</span></div>
+                <div className="users-muted">{permissionText(user)}</div>
+                <div><span className={`badge ${user.isActive?'badge-success':'badge-danger'}`}>{user.isActive?'Active':'Inactive'}</span></div>
+                <div className="users-muted">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</div>
+                <div>
+                  {canEdit ? (
+                    <div className="users-actions">
+                      <button className="btn btn-sm btn-secondary users-icon-btn" onClick={() => openEditDialog(user)} title="Edit user" aria-label="Edit user">
+                        ✏️
+                      </button>
+                      <button className={`btn btn-sm users-icon-btn ${user.isActive ? 'btn-danger' : 'btn-success'}`} onClick={() => toggleStatus(user)} title={user.isActive ? 'Make inactive' : 'Make active'} aria-label={user.isActive ? 'Make inactive' : 'Make active'}>
+                        {user.isActive ? '🔒' : '🔓'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="users-protected">Protected</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
