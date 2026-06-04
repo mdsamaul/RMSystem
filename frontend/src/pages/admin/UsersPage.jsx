@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { userAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 const STAFF_PERMISSIONS = [
   { key: 'MENU_CREATE', label: 'Create menu' },
@@ -19,10 +20,12 @@ const emptyForm = {
 }
 
 export default function UsersPage() {
+  const { isAdmin } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
+  const [dialogMode, setDialogMode] = useState(null)
   const [form, setForm] = useState(emptyForm)
 
   const load = () => {
@@ -35,7 +38,16 @@ export default function UsersPage() {
 
   useEffect(() => { load() }, [])
 
+  const openCreateDialog = () => {
+    if (!isAdmin) return
+    setDialogMode('create')
+    setEditingUser(null)
+    setForm(emptyForm)
+  }
+
   const openStaffDialog = (user) => {
+    if (!isAdmin) return
+    setDialogMode('edit')
     setEditingUser(user)
     setForm({
       fullName: user.fullName || '',
@@ -47,9 +59,10 @@ export default function UsersPage() {
     })
   }
 
-  const closeDialog = () => {
-    if (saving) return
+  const closeDialog = (force = false) => {
+    if (saving && !force) return
     setEditingUser(null)
+    setDialogMode(null)
     setForm(emptyForm)
   }
 
@@ -68,7 +81,8 @@ export default function UsersPage() {
 
   const saveStaff = async (event) => {
     event.preventDefault()
-    if (!editingUser) return
+    if (!isAdmin) return
+    if (dialogMode === 'edit' && !editingUser) return
 
     setSaving(true)
     try {
@@ -81,12 +95,18 @@ export default function UsersPage() {
       }
       if (form.password.trim()) payload.password = form.password.trim()
 
-      const res = await userAPI.updateStaff(editingUser.id, payload)
-      setUsers(prev => prev.map(user => user.id === editingUser.id ? res.data.data : user))
-      toast.success('Staff updated')
-      closeDialog()
+      if (dialogMode === 'create') {
+        const res = await userAPI.createStaff({ ...payload, password: form.password.trim() })
+        setUsers(prev => [...prev, res.data.data])
+        toast.success('Staff created')
+      } else {
+        const res = await userAPI.updateStaff(editingUser.id, payload)
+        setUsers(prev => prev.map(user => user.id === editingUser.id ? res.data.data : user))
+        toast.success('Staff updated')
+      }
+      closeDialog(true)
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Staff update failed')
+      toast.error(e.response?.data?.message || 'Staff save failed')
     } finally {
       setSaving(false)
     }
@@ -99,8 +119,17 @@ export default function UsersPage() {
   return (
     <div className="page-content">
       <div className="page-header">
-        <h1>Users</h1>
-        <p>Manage all registered users</p>
+        <div className="flex-between">
+          <div>
+            <h1>Users</h1>
+            <p>Manage all registered users</p>
+          </div>
+          {isAdmin && (
+            <button className="btn btn-primary" onClick={openCreateDialog}>
+              Staff Account
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card">
@@ -149,7 +178,7 @@ export default function UsersPage() {
                     <td><span className={`badge ${user.isActive?'badge-success':'badge-danger'}`}>{user.isActive?'Active':'Inactive'}</span></td>
                     <td style={{fontSize:'12px',color:'var(--text-muted)'}}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</td>
                     <td>
-                      {isStaff ? (
+                      {isAdmin && isStaff ? (
                         <button className="btn btn-sm btn-secondary" onClick={() => openStaffDialog(user)}>
                           Edit
                         </button>
@@ -165,11 +194,11 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {editingUser && (
+      {dialogMode && (
         <div className="modal-overlay" onMouseDown={closeDialog}>
           <form className="modal" onSubmit={saveStaff} onMouseDown={event => event.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Staff</h3>
+              <h3>{dialogMode === 'create' ? 'Create Staff Account' : 'Edit Staff'}</h3>
               <button type="button" className="btn btn-icon btn-secondary" onClick={closeDialog} aria-label="Close">
                 x
               </button>
@@ -219,7 +248,8 @@ export default function UsersPage() {
                     value={form.password}
                     onChange={event => updateField('password', event.target.value)}
                     minLength={6}
-                    placeholder="Leave blank to keep old password"
+                    required={dialogMode === 'create'}
+                    placeholder={dialogMode === 'create' ? 'Minimum 6 characters' : 'Leave blank to keep old password'}
                   />
                 </div>
               </div>
@@ -257,7 +287,7 @@ export default function UsersPage() {
                 Cancel
               </button>
               <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? 'Saving...' : 'Save staff'}
+                {saving ? 'Saving...' : dialogMode === 'create' ? 'Create staff' : 'Save staff'}
               </button>
             </div>
           </form>

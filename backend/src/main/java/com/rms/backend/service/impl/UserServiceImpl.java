@@ -80,4 +80,26 @@ public class UserServiceImpl implements UserService {
         return UserResponse.from(userRepository.save(user));
     }
 
+    @Override
+    public UserResponse createStaff(StaffUpdateRequest request) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required for new staff");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already registered: " + request.getEmail());
+        }
+
+        User user = User.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(User.Role.STAFF)
+                .isActive(request.getIsActive() == null ? Boolean.TRUE : request.getIsActive())
+                .permissions(request.getPermissions() == null ? new HashSet<>() : new HashSet<>(request.getPermissions()))
+                .build();
+
+        return UserResponse.from(userRepository.save(user));
+    }
+
 }

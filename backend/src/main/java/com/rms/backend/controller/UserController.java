@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -83,5 +84,15 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Staff updated",
                 userService.updateStaff(id, request)));
+    }
+
+    @PostMapping("/staff")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create staff user")
+    public ResponseEntity<ApiResponse<UserResponse>> createStaff(
+            @Valid @RequestBody StaffUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Staff created",
+                userService.createStaff(request)));
     }
 }

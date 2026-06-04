@@ -14,4 +14,5 @@ public interface UserService {
     void toggleUserStatus(Long id);
     UserResponse updateStaffPermissions(Long id, Set<User.Permission> permissions);
     UserResponse updateStaff(Long id, StaffUpdateRequest request);
+    UserResponse createStaff(StaffUpdateRequest request);
 }
