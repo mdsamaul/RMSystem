@@ -24,7 +24,7 @@ public class User implements UserDetails {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "permission", nullable = false)
+    @Column(name = "permission", nullable = false, length = 50, columnDefinition = "varchar(50)")
     @Builder.Default private Set<Permission> permissions = new HashSet<>();
     @Builder.Default private Boolean isActive = true;
     @Column(updatable=false) private LocalDateTime createdAt;
@@ -49,5 +49,14 @@ public class User implements UserDetails {
     @Override public boolean isCredentialsNonExpired(){ return true; }
     @Override public boolean isEnabled(){ return isActive; }
     public enum Role { ADMIN, STAFF, CUSTOMER }
-    public enum Permission { MENU_CREATE, MENU_UPDATE, MENU_DELETE, MENU_AVAILABILITY }
+    public enum Permission {
+        MENU_CREATE,
+        MENU_UPDATE,
+        MENU_DELETE,
+        MENU_AVAILABILITY,
+        TABLE_CREATE,
+        TABLE_UPDATE,
+        TABLE_STATUS,
+        TABLE_DELETE
+    }
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rms.backend.dto.request.CustomerUpdateRequest;
 import com.rms.backend.dto.request.StaffPermissionsRequest;
 import com.rms.backend.dto.request.StaffUpdateRequest;
 import com.rms.backend.dto.response.ApiResponse;
@@ -94,5 +95,26 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Staff created",
                 userService.createStaff(request)));
+    }
+
+    @PutMapping("/{id}/customer")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update customer user details")
+    public ResponseEntity<ApiResponse<UserResponse>> updateCustomer(
+            @PathVariable Long id,
+            @Valid @RequestBody CustomerUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Customer updated",
+                userService.updateCustomer(id, request)));
+    }
+
+    @PostMapping("/customer")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create customer user")
+    public ResponseEntity<ApiResponse<UserResponse>> createCustomer(
+            @Valid @RequestBody CustomerUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Customer created",
+                userService.createCustomer(request)));
     }
 }

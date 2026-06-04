@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.rms.backend.dto.request.CustomerUpdateRequest;
 import com.rms.backend.dto.request.StaffUpdateRequest;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.entity.User;
@@ -40,6 +41,9 @@ public class UserServiceImpl implements UserService {
     }
     @Override public void toggleUserStatus(Long id) {
         var user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() == User.Role.ADMIN) {
+            throw new BadRequestException("Admin account cannot be disabled here");
+        }
         user.setIsActive(!user.getIsActive());
         userRepository.save(user);
     }
@@ -61,11 +65,7 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Only staff users can be edited here");
         }
 
-        userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) {
-                throw new BadRequestException("Email already registered: " + request.getEmail());
-            }
-        });
+        validateUniqueEmail(request.getEmail(), id);
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
@@ -100,6 +100,56 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         return UserResponse.from(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse updateCustomer(Long id, CustomerUpdateRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() != User.Role.CUSTOMER) {
+            throw new BadRequestException("Only customer users can be edited here");
+        }
+
+        validateUniqueEmail(request.getEmail(), id);
+
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setIsActive(request.getIsActive() == null ? Boolean.TRUE : request.getIsActive());
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse createCustomer(CustomerUpdateRequest request) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required for new customer");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already registered: " + request.getEmail());
+        }
+
+        User user = User.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(User.Role.CUSTOMER)
+                .isActive(request.getIsActive() == null ? Boolean.TRUE : request.getIsActive())
+                .build();
+
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    private void validateUniqueEmail(String email, Long currentUserId) {
+        userRepository.findByEmail(email).ifPresent(existing -> {
+            if (!existing.getId().equals(currentUserId)) {
+                throw new BadRequestException("Email already registered: " + email);
+            }
+        });
     }
 
 }

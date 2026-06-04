@@ -60,6 +60,8 @@ export const userAPI = {
   updatePermissions: (id, permissions) => api.patch(`/users/${id}/permissions`, { permissions }),
   updateStaff: (id, data) => api.put(`/users/${id}/staff`, data),
   createStaff: data => api.post('/users/staff', data),
+  updateCustomer: (id, data) => api.put(`/users/${id}/customer`, data),
+  createCustomer: data => api.post('/users/customer', data),
 }
 export const reportAPI = {
   getRevenue: (start, end) => api.get('/reports/revenue', { params: { start, end } }),

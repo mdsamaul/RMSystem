@@ -3,6 +3,7 @@ package com.rms.backend.service;
 import java.util.List;
 import java.util.Set;
 
+import com.rms.backend.dto.request.CustomerUpdateRequest;
 import com.rms.backend.dto.request.StaffUpdateRequest;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.entity.User;
@@ -15,4 +16,6 @@ public interface UserService {
     UserResponse updateStaffPermissions(Long id, Set<User.Permission> permissions);
     UserResponse updateStaff(Long id, StaffUpdateRequest request);
     UserResponse createStaff(StaffUpdateRequest request);
+    UserResponse updateCustomer(Long id, CustomerUpdateRequest request);
+    UserResponse createCustomer(CustomerUpdateRequest request);
 }
