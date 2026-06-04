@@ -5,21 +5,22 @@ import { useAuth } from '../../context/AuthContext'
 
 const adminNav = [
   { section: 'Overview' },
-  { to: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
+  { path: 'dashboard', icon: '📊', label: 'Dashboard' },
   { section: 'Operations' },
-  { to: '/admin/orders', icon: '📋', label: 'Orders' },
-  { to: '/admin/tables', icon: '🪑', label: 'Tables' },
-  { to: '/admin/reservations', icon: '🗓️', label: 'Reservations' },
+  { path: 'orders', icon: '📋', label: 'Orders' },
+  { path: 'tables', icon: '🪑', label: 'Tables' },
+  { path: 'reservations', icon: '🗓️', label: 'Reservations' },
   { section: 'Menu' },
-  { to: '/admin/menu', icon: '🍽️', label: 'Menu Management' },
+  { path: 'menu', icon: '🍽️', label: 'Menu Management' },
   { section: 'Admin Only', adminOnly: true },
-  { to: '/admin/users', icon: '👥', label: 'Users', adminOnly: true },
-  { to: '/admin/reports', icon: '📈', label: 'Reports', adminOnly: true },
+  { path: 'users', icon: '👥', label: 'Users', adminOnly: true },
+  { path: 'reports', icon: '📈', label: 'Reports', adminOnly: true },
 ]
 
 export default function AdminLayout() {
   const { user, logout, isAdmin } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const basePath = isAdmin ? '/admin' : '/staff'
 
   return (
     <div className={`app-layout admin-layout${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
@@ -57,7 +58,7 @@ export default function AdminLayout() {
             }
             if (item.adminOnly && !isAdmin) return null
             return (
-              <NavLink key={item.to} to={item.to} className={({isActive})=>`nav-item${isActive?' active':''}`} title={item.label}>
+              <NavLink key={item.path} to={`${basePath}/${item.path}`} className={({isActive})=>`nav-item${isActive?' active':''}`} title={item.label}>
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
               </NavLink>
