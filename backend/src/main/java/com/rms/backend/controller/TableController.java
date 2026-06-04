@@ -42,29 +42,29 @@ public class TableController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary="Add a new table (Admin only)")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('TABLE_CREATE')")
+    @Operation(summary="Add a new table")
     public ResponseEntity<ApiResponse<TableResponse>> createTable(@Valid @RequestBody TableRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Table created", tableService.createTable(req)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary="Update a table (Admin only)")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('TABLE_UPDATE')")
+    @Operation(summary="Update a table")
     public ResponseEntity<ApiResponse<TableResponse>> updateTable(@PathVariable Long id, @Valid @RequestBody TableRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Table updated", tableService.updateTable(id, req)));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('TABLE_STATUS')")
     @Operation(summary="Update table status")
     public ResponseEntity<ApiResponse<TableResponse>> updateStatus(@PathVariable Long id, @RequestParam RestaurantTable.TableStatus status) {
         return ResponseEntity.ok(ApiResponse.success("Status updated", tableService.updateStatus(id, status)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary="Delete a table (Admin only)")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('TABLE_DELETE')")
+    @Operation(summary="Delete a table")
     public ResponseEntity<ApiResponse<Void>> deleteTable(@PathVariable Long id) {
         tableService.deleteTable(id);
         return ResponseEntity.ok(ApiResponse.success("Table deleted"));

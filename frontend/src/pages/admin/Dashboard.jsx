@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { orderAPI, tableAPI, userAPI, reportAPI } from '../../services/api'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { useAuth } from '../../context/AuthContext'
 
 const COLORS = ['#e85d04','#3b82f6','#10b981','#f59e0b','#8b5cf6']
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth()
   const [stats, setStats] = useState({ orders:0, tables:0, users:0, revenue:0 })
   const [topItems, setTopItems] = useState([])
   const [occupancy, setOccupancy] = useState(null)
@@ -12,25 +14,46 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      orderAPI.getAll(),
-      tableAPI.getAll(),
-      userAPI.getAll(),
-      reportAPI.getTopItems(),
-      reportAPI.getOccupancy(),
-    ]).then(([orders, tables, users, items, occ]) => {
+    const loadDashboard = async () => {
+      const [orders, tables] = await Promise.all([
+        orderAPI.getAll(),
+        tableAPI.getAll(),
+      ])
       const allOrders = orders.data.data || []
+      const allTables = tables.data.data || []
+      let usersCount = 0
+      let topSellingItems = []
+      let tableOccupancy = {
+        total: allTables.length,
+        available: allTables.filter(t => t.status === 'AVAILABLE').length,
+        occupied: allTables.filter(t => t.status === 'OCCUPIED').length,
+        reserved: allTables.filter(t => t.status === 'RESERVED').length,
+      }
+
+      if (isAdmin) {
+        const [users, items, occ] = await Promise.all([
+          userAPI.getAll(),
+          reportAPI.getTopItems(),
+          reportAPI.getOccupancy(),
+        ])
+        usersCount = (users.data.data || []).length
+        topSellingItems = (items.data.data || []).slice(0,5)
+        tableOccupancy = occ.data.data
+      }
+
       setStats({
         orders: allOrders.length,
-        tables: (tables.data.data || []).length,
-        users: (users.data.data || []).length,
+        tables: allTables.length,
+        users: usersCount,
         revenue: allOrders.filter(o=>o.status==='CLOSED').reduce((s,o)=>s+parseFloat(o.totalAmount||0),0)
       })
-      setTopItems((items.data.data || []).slice(0,5))
-      setOccupancy(occ.data.data)
+      setTopItems(topSellingItems)
+      setOccupancy(tableOccupancy)
       setRecentOrders(allOrders.slice(0,6))
-    }).catch(()=>{}).finally(()=>setLoading(false))
-  }, [])
+    }
+
+    loadDashboard().catch(()=>{}).finally(()=>setLoading(false))
+  }, [isAdmin])
 
   const statusBadge = s => {
     const map = { PENDING:'badge-warning', CONFIRMED:'badge-info', IN_PROGRESS:'badge-purple',
@@ -130,7 +153,7 @@ export default function Dashboard() {
       <div className="card mt-4">
         <div className="card-header">
           <h2>🕐 Recent Orders</h2>
-          <a href="/admin/orders" className="btn btn-secondary btn-sm">View All →</a>
+          <a href={isAdmin ? '/admin/orders' : '/staff/orders'} className="btn btn-secondary btn-sm">View All →</a>
         </div>
         <div className="table-wrap">
           <table>
