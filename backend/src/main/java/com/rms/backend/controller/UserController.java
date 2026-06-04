@@ -7,11 +7,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rms.backend.dto.request.StaffPermissionsRequest;
+import com.rms.backend.dto.request.StaffUpdateRequest;
 import com.rms.backend.dto.response.ApiResponse;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.service.UserService;
@@ -21,6 +23,7 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -69,5 +72,16 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Permissions updated",
                 userService.updateStaffPermissions(id, request.getPermissions())));
+    }
+
+    @PutMapping("/{id}/staff")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update staff user details")
+    public ResponseEntity<ApiResponse<UserResponse>> updateStaff(
+            @PathVariable Long id,
+            @Valid @RequestBody StaffUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Staff updated",
+                userService.updateStaff(id, request)));
     }
 }

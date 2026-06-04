@@ -58,6 +58,7 @@ export const userAPI = {
   getProfile: () => api.get('/users/profile'),
   toggleStatus: id => api.patch(`/users/${id}/toggle-status`),
   updatePermissions: (id, permissions) => api.patch(`/users/${id}/permissions`, { permissions }),
+  updateStaff: (id, data) => api.put(`/users/${id}/staff`, data),
 }
 export const reportAPI = {
   getRevenue: (start, end) => api.get('/reports/revenue', { params: { start, end } }),

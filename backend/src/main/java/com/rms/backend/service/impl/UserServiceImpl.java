@@ -7,7 +7,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.rms.backend.dto.request.StaffUpdateRequest;
 import com.rms.backend.dto.response.UserResponse;
 import com.rms.backend.entity.User;
 import com.rms.backend.exception.BadRequestException;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Service @RequiredArgsConstructor @Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
@@ -48,6 +51,32 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Permissions can only be assigned to staff users");
         }
         user.setPermissions(permissions == null ? new HashSet<>() : new HashSet<>(permissions));
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse updateStaff(Long id, StaffUpdateRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() != User.Role.STAFF) {
+            throw new BadRequestException("Only staff users can be edited here");
+        }
+
+        userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
+                throw new BadRequestException("Email already registered: " + request.getEmail());
+            }
+        });
+
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setIsActive(request.getIsActive() == null ? Boolean.TRUE : request.getIsActive());
+        user.setPermissions(request.getPermissions() == null ? new HashSet<>() : new HashSet<>(request.getPermissions()));
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
         return UserResponse.from(userRepository.save(user));
     }
 
