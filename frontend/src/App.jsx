@@ -28,8 +28,7 @@ function RootRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <div className="loading-page"><div className="spinner"/></div>
   if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />
-  if (user.role === 'STAFF') return <Navigate to="/staff/dashboard" replace />
+  if (user.role === 'ADMIN' || user.role === 'STAFF') return <Navigate to="/admin/dashboard" replace />
   return <Navigate to="/menu" replace />
 }
 
@@ -39,9 +38,8 @@ function AppRoutes() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<AuthPage />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<PrivateRoute roles={['ADMIN']}><AdminLayout /></PrivateRoute>}>
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+      {/* Admin / Staff Routes */}
+      <Route path="/admin" element={<PrivateRoute roles={['ADMIN','STAFF']}><AdminLayout /></PrivateRoute>}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="menu" element={<MenuManagement />} />
         <Route path="orders" element={<OrdersPage />} />
@@ -49,16 +47,6 @@ function AppRoutes() {
         <Route path="reservations" element={<ReservationsPage />} />
         <Route path="users" element={<PrivateRoute roles={['ADMIN']}><UsersPage /></PrivateRoute>} />
         <Route path="reports" element={<PrivateRoute roles={['ADMIN']}><ReportsPage /></PrivateRoute>} />
-      </Route>
-
-      {/* Staff Routes */}
-      <Route path="/staff" element={<PrivateRoute roles={['STAFF']}><AdminLayout /></PrivateRoute>}>
-        <Route index element={<Navigate to="/staff/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="menu" element={<MenuManagement />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="tables" element={<TablesPage />} />
-        <Route path="reservations" element={<ReservationsPage />} />
       </Route>
 
       {/* Customer Routes */}

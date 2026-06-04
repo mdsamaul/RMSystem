@@ -16,9 +16,7 @@ public interface MenuService {
     void deleteItem(Long id);
     MenuItemResponse toggleAvailability(Long id);
     List<MenuItemResponse> getAllItems();
-    List<MenuItemResponse> getAllItemsIncludingUnavailable();
     List<MenuItemResponse> getItemsByCategory(Long categoryId);
-    List<MenuItemResponse> getItemsByCategoryIncludingUnavailable(Long categoryId);
     MenuItemResponse getItemById(Long id);
     List<MenuItemResponse> searchItems(String keyword);
 }

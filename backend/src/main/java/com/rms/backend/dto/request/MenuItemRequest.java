@@ -9,7 +9,6 @@ public class MenuItemRequest {
     @NotBlank @Size(max=150) private String name;
     private String description;
     @NotNull @DecimalMin("0.01") private BigDecimal price;
-    @DecimalMin("0.01") private BigDecimal regularPrice;
     private String imageUrl;
     @Builder.Default private Boolean isAvailable = true;
     @Builder.Default private Integer estimatedMinutes = 15;

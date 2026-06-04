@@ -10,17 +10,12 @@ export default function AuthPage() {
   const [regData, setRegData] = useState({ fullName: '', email: '', password: '', phone: '' })
   const { login, register } = useAuth()
   const navigate = useNavigate()
-  const dashboardPath = (role) => {
-    if (role === 'ADMIN') return '/admin/dashboard'
-    if (role === 'STAFF') return '/staff/dashboard'
-    return '/menu'
-  }
 
   const handleLogin = async e => {
     e.preventDefault(); setLoading(true)
     try {
       const role = await login(loginData.email, loginData.password)
-      navigate(dashboardPath(role))
+      navigate(role === 'CUSTOMER' ? '/menu' : '/admin/dashboard')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid email or password')
     } finally { setLoading(false) }
@@ -40,7 +35,7 @@ export default function AuthPage() {
     setLoading(true)
     try {
       const role = await login(email, pass)
-      navigate(dashboardPath(role))
+      navigate(role === 'CUSTOMER' ? '/menu' : '/admin/dashboard')
     } catch { toast.error('Login failed') } finally { setLoading(false) }
   }
 

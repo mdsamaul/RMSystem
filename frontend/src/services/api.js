@@ -57,11 +57,6 @@ export const userAPI = {
   getAll: () => api.get('/users'),
   getProfile: () => api.get('/users/profile'),
   toggleStatus: id => api.patch(`/users/${id}/toggle-status`),
-  updatePermissions: (id, permissions) => api.patch(`/users/${id}/permissions`, { permissions }),
-  updateStaff: (id, data) => api.put(`/users/${id}/staff`, data),
-  createStaff: data => api.post('/users/staff', data),
-  updateCustomer: (id, data) => api.put(`/users/${id}/customer`, data),
-  createCustomer: data => api.post('/users/customer', data),
 }
 export const reportAPI = {
   getRevenue: (start, end) => api.get('/reports/revenue', { params: { start, end } }),

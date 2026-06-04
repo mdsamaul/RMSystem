@@ -17,10 +17,7 @@ public class MenuItem {
     private String description;
     @Column(nullable=false,precision=10,scale=2) 
     private BigDecimal price;
-    @Column(precision=10,scale=2)
-    private BigDecimal regularPrice;
-    @Lob
-    @Column(columnDefinition="LONGTEXT")
+    @Column(length=500) 
     private String imageUrl;
     @Builder.Default private Boolean isAvailable = true;
     @Builder.Default private Integer estimatedMinutes = 15;

@@ -1,10 +1,4 @@
 HELP.md
-.env
-.env.local
-frontend/.env
-frontend/.env.local
-backend/.env
-backend/.env.local
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

@@ -33,7 +33,7 @@ public class MenuController {
     }
 
     @PostMapping("/categories")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_CREATE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Create a new category (Admin only)")
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> createCategory(@Valid @RequestBody MenuCategoryRequest req) {
@@ -41,7 +41,7 @@ public class MenuController {
     }
 
     @PutMapping("/categories/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_UPDATE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Update a category (Admin only)")
     public ResponseEntity<ApiResponse<MenuCategoryResponse>> updateCategory(@PathVariable Long id, @Valid @RequestBody MenuCategoryRequest req) {
@@ -49,7 +49,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/categories/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_DELETE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Delete a category (Admin only)")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
@@ -62,14 +62,11 @@ public class MenuController {
     @Operation(summary="Get all available menu items (public)")
     public ResponseEntity<ApiResponse<List<MenuItemResponse>>> getAllItems(
             @RequestParam(required=false) Long categoryId,
-            @RequestParam(required=false) String search,
-            @RequestParam(defaultValue="false") boolean includeUnavailable) {
+            @RequestParam(required=false) String search) {
         List<MenuItemResponse> items;
         if (search != null && !search.isBlank()) items = menuService.searchItems(search);
-        else if (categoryId != null) items = includeUnavailable
-                ? menuService.getItemsByCategoryIncludingUnavailable(categoryId)
-                : menuService.getItemsByCategory(categoryId);
-        else items = includeUnavailable ? menuService.getAllItemsIncludingUnavailable() : menuService.getAllItems();
+        else if (categoryId != null) items = menuService.getItemsByCategory(categoryId);
+        else items = menuService.getAllItems();
         return ResponseEntity.ok(ApiResponse.success("Items fetched", items));
     }
 
@@ -80,7 +77,7 @@ public class MenuController {
     }
 
     @PostMapping("/items")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_CREATE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Create a new menu item (Admin only)")
     public ResponseEntity<ApiResponse<MenuItemResponse>> createItem(@Valid @RequestBody MenuItemRequest req) {
@@ -88,7 +85,7 @@ public class MenuController {
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_UPDATE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Update a menu item (Admin only)")
     public ResponseEntity<ApiResponse<MenuItemResponse>> updateItem(@PathVariable Long id, @Valid @RequestBody MenuItemRequest req) {
@@ -96,7 +93,7 @@ public class MenuController {
     }
 
     @PatchMapping("/items/{id}/availability")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_AVAILABILITY')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Toggle item availability (Admin only)")
     public ResponseEntity<ApiResponse<MenuItemResponse>> toggleAvailability(@PathVariable Long id) {
@@ -104,7 +101,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/items/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('MENU_DELETE')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name="bearerAuth")
     @Operation(summary="Delete a menu item (Admin only)")
     public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable Long id) {
